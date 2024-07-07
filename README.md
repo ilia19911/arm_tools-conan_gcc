@@ -35,6 +35,14 @@
     rm -r  /home/iahve/.conan2/p
 командой 
 
+    conan upload arm-gcc/* -r arm-gcc
+
+если пока репо артифактория не добавлен, то добавить командой
+
+    conan remote add arm-gcc http://192.168.71.113:8081/artifactory/api/conan/arm-gcc
+
+URL может поменяться, узнавать у, типа "devops" разрабов 
+
 Тулчейн имеет краткий вывод по установленным режимам работы компилятора и флагам в виде
 
     -- CMAKE_SYSTEM_NAME: Generic
