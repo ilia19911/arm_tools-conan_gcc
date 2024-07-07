@@ -181,21 +181,22 @@ class ArmGccConan(ConanFile):
         for dir_name in dirs_to_copy:
             copy(self, pattern=f"{dir_name}/*", src=self.build_folder, dst=self.package_folder, keep_path=True)
         template_path = os.path.join(self.package_folder, "cmake/arm_gcc_toolchain_template.cmake")
-        with open(template_path, "r") as template_file:
+        with open(template_path, "r+") as template_file:
             template_content = template_file.read()
-        variables = {
-            "@TRIPLET@": triple,
-            "@PROCESSOR@": target.arch_cmake(),
-            "@SYSTEM@": target.os_cmake(),
-            "@CROSSCOMPILING@": "FALSE" if target.os == host.os else "TRUE"
-        }
-        for var, value in variables.items():
-            template_content = template_content.replace(var, value)
-        # config_content = template_content.replace("@TRIPLET@", triple)
-        # Write the new config file
-        config_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain.cmake")
-        with open(config_path, "w") as config_file:
-            config_file.write(template_content)
+            variables = {
+                "@TRIPLET@": triple,
+                "@PROCESSOR@": target.arch_cmake(),
+                "@SYSTEM@": target.os_cmake(),
+                "@CROSSCOMPILING@": "FALSE" if target.os == host.os else "TRUE"
+            }
+            for var, value in variables.items():
+                template_content = template_content.replace(var, value)
+            template_file.seek(0)
+            template_file.write(template_content)
+            # Обрезаем файл до текущей позиции курсора, чтобы удалить старое содержимое
+            template_file.truncate()
+            template_file.close()
+
 
     def source(self):
         print("SOURCE")
@@ -206,18 +207,20 @@ class ArmGccConan(ConanFile):
         # self.cpp_info.bindirs.append(os.path.join(self.package_folder, "arm-none-eabi", "bin"))
 
         # Read the template file
-        template_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain.cmake")
-        with open(template_path, "r+") as config_file:
-            template_content = config_file.read()
+        template_path = os.path.join(self.package_folder, "cmake/arm_gcc_toolchain_template.cmake")
+        with open(template_path, "r") as template_file:
+            template_content = template_file.read()
             # Replace placeholders with actual values
             config_content = template_content.replace("@TOOLS_PATH@", self.package_folder)
-            # Перемещаем курсор в начало файла
-            config_file.seek(0)
-            config_file.write(config_content)
-            # Обрезаем файл до текущей позиции курсора, чтобы удалить старое содержимое
-            config_file.truncate()
+            template_file.close()
 
-        self.conf_info.define("tools.cmake.cmaketoolchain:user_toolchain", [template_path])
+        toolchain_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain.cmake")
+        with open(toolchain_path, "w") as toolchain_file:
+            toolchain_file.write(config_content)
+            toolchain_file.close()
+
+
+        self.conf_info.define("tools.cmake.cmaketoolchain:user_toolchain", [toolchain_path])
 
         # Add the path to the CMake modules
         self.cpp_info.builddirs.append(os.path.join(self.package_folder, "cmake"))

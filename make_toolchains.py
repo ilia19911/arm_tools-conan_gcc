@@ -49,8 +49,8 @@ for folder in folders:
     # print(folder)
     host, target, version, _ = tc_info.parse_toolchain_filename(filename)
     # print(host.os, target.os)
-    # if host.os == tc_info.OperationSystems.Linux.name and host.arch_name() == tc_info.Architectures.x86_64.name and target.os\
-    #         == tc_info.OperationSystems.baremetal.name and target.arch_name() == tc_info.Architectures.arm.name:
+    # if host.os == tc_info.OperationSystems.Linux and host.arch == tc_info.Architectures.x86_64 and target.os\
+    #         == tc_info.OperationSystems.Generic and target.arch == tc_info.Architectures.arm:
     v = version.split('.')[0]
     comand = f"export URL=\"{folder}\" && conan create . {comand_maker("-s ", target, v)} {comand_maker("-s:b ", host, v)} --version={version} --build-require"
     print(comand)
@@ -58,8 +58,11 @@ for folder in folders:
     # print(result)
     if result.returncode == 0:
         print("Команда завершилась успешно")
-        # print("Вывод команды:", result.stdout)
-    else:
+        print("Вывод команды:", result.stdout)
+        # comand = f"conan upload arm-gcc/{version} -r arm-gcc"
+        # print(comand)
+        # result = subprocess.run(comand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode !=0:
         print("Команда завершилась с ошибкой")
         print("Ошибка:", result.stderr)
         raise ValueError(f"сборка пакета не удалась, почините скрипт сборки")
