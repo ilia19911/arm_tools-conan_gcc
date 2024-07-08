@@ -1,11 +1,20 @@
+import os
+import sys
+import subprocess
+import re
+import requests
+from urllib.parse import urljoin
+from enum import Enum
+try:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', "bs4"])
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', "conan"])
+except subprocess.CalledProcessError as e:
+    print(f"Error installing package bs4: {e}")
+    sys.exit(1)
+
 from conan import ConanFile
 from conan.tools.files import get, copy
-import os
-from enum import Enum
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-import requests
-import re
 
 
 #имя это название в conan , значение в cmake
@@ -133,8 +142,7 @@ class ArmGccConan(ConanFile):
 
     def system_requirements(self):
         print("PYTHON_REQUIREMENTS")
-        import subprocess
-        import sys
+
         try:
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', "bs4"])
         except subprocess.CalledProcessError as e:
@@ -164,8 +172,10 @@ class ArmGccConan(ConanFile):
 
     def package(self):
         print("PACKAGE")
-        if not os.getenv("URL"):
-            raise ValueError(f"Set valid gcc url in options. now in is {os.getenv("URL")}")
+        url = os.getenv("URL")
+        if not url:
+
+            raise ValueError(f"Set valid gcc url in options. now in is {url}")
         try:
             files = list_artifactory_folder(os.getenv("URL"))
             self.sha, self.archive_name = have_sha256_and_filename(os.getenv("URL"))
@@ -173,7 +183,7 @@ class ArmGccConan(ConanFile):
             print(f"Filename: {self.archive_name}")
         except FileNotFoundError as e:
             print(e)
-        get(self, f"{os.getenv("URL")}/{self.archive_name}",
+        get(self, f"{url}/{self.archive_name}",
             sha256=self.sha, strip_root=True)
         host, target, vers, triple = parse_toolchain_filename(self.archive_name)
         dirs_to_copy = [triple, "bin", "include", "lib", "libexec"]

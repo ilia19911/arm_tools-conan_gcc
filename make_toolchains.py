@@ -1,7 +1,4 @@
-import requests
 import conanfile as tc_info
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 import subprocess
 
 def comand_maker(pref, info, vers):
@@ -52,7 +49,9 @@ for folder in folders:
     # if host.os == tc_info.OperationSystems.Linux and host.arch == tc_info.Architectures.x86_64 and target.os\
     #         == tc_info.OperationSystems.Generic and target.arch == tc_info.Architectures.arm:
     v = version.split('.')[0]
-    comand = f"export URL=\"{folder}\" && conan create . {comand_maker("-s ", target, v)} {comand_maker("-s:b ", host, v)} --version={version} --build-require"
+    s = "-s "
+    s_b = "-s:b "
+    comand = f"export URL=\"{folder}\" && conan create . {comand_maker(s, target, v)} {comand_maker(s_b, host, v)} --version={version} --build-require"
     print(comand)
     result = subprocess.run(comand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     # print(result)
