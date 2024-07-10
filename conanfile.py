@@ -72,12 +72,12 @@ host_info = {
 }
 
 
+
+
 def have_sha256_and_filename(folder_url, auth=None):
     files = list_artifactory_folder(folder_url)
     for file in files:
         if (file.endswith('zip.sha256asc') or file.endswith('.sha256asc') or file.endswith('.tar.xz.sha256asc') ) and (not file.endswith('exe.sha256asc') and not file.endswith('pkg.sha256asc')):
-            print(folder_url)
-            print(file)
             file_str = str(file)
             folder_url_str = str(folder_url)
             file_url = urljoin(folder_url_str, file_str)
@@ -120,124 +120,194 @@ def parse_toolchain_filename(filename):
     return host_info[host_arch], target_info[target_arch], version, target_arch
 
 
+def collect_nested_toolchains(base_url, auth=None):
+    folders = []
+    stack = [base_url]
+
+    current_url = stack.pop()
+    print(f"Processing URL: {current_url}")  # Print the URL being processed
+    files = list_artifactory_folder(current_url, auth)
+
+    for file in files:
+        if file == '../' or not file.endswith('/'):  # Skip the parent directory link
+            continue
+        full_url = base_url + file if not file.startswith('http') else file
+        if None is not have_sha256_and_filename(full_url):
+            folders.append(full_url)
+            stack.append(full_url)
+        else:
+            nested_urls = collect_nested_toolchains(full_url)
+            folders.extend(nested_urls)
+    return folders
+
+
 class ArmGccConan(ConanFile):
+    base_url = "http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/"
     name = "arm-gcc"
-    # version = "13.2.rel1"
     license = "GPL-3.0-only"
     homepage = ""
     url = ""
     author = "Ostanin <iahve1991@gmail.com>"
     description = "пакет кросскомпиляции ARM-GCC  для локального использования"
     topics = ("conan", "arm-gcc", "toolchain")
-    # options = {"source_url": ["ANY"]}
-    # default_options = {"source_url": "None"}
     settings = "os", "arch"
     package_type = "application"
-    programs = {}
-    sha = {}
-    archive_name = {}
-    exports_sources = "arm_gcc_toolchain_template.cmake"
+    exports_sources = "arm-gcc-toolchain-template.cmake", "source_url.txt"
 
     # generators = "CMakeDeps"
 
-    def system_requirements(self):
-        print("PYTHON_REQUIREMENTS")
+    # def generate_config(self, template_path, dest_path, variables):
+    #
+    #     with open(template_path, "r") as template_file:
+    #         template_content = template_file.read()
+    #         for var, value in variables.items():
+    #             template_content = template_content.replace(var, value)
+    #         with open(dest_path, "w") as dest_file:
+    #             dest_file.write(template_content)
+    #             dest_file.close()
+    #         template_file.close()
 
+    def build_gcc(self, url, dest):
+        print("toolchain_url: ", str(url))
+        print("destination folder: ", str(dest))
+        sha, filename = have_sha256_and_filename(str(url))
+        # print(folder)
+        host, target, vers, triple = parse_toolchain_filename(filename)
         try:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', "bs4"])
-        except subprocess.CalledProcessError as e:
-            print(f"Error installing package bs4: {e}")
-            sys.exit(1)
+            print(f"SHA: {sha}")
+            print(f"Filename: {filename}")
+            get(self, f"{url}/{filename}", sha256=sha, strip_root=True, destination=dest)
+        except FileNotFoundError as e:
+            print(e)
+
+    def config_options(self):
+        print("GCC_CONFIG_OPTIONS")
+
+    def validate(self):
+        print("GCC_VALIDATION")
+        # url = open(f"{self.source_folder}/source_url.txt", "r").read()
+        # print("gcc url is:", url)
+        # sha, filename = have_sha256_and_filename(str(url))
+        # host, target, vers, triple = parse_toolchain_filename(filename)
+        # if (host.os_conan() == self.settings.os and
+        #         host.arch_conan() == self.settings.arch and
+        #         target.os_conan() == self.settings_target.os and
+        #         target.arch_conan() == self.settings_target.arch and
+        #         self.version == vers):
+        #     print("gcc has found")
+        # else:
+        #     raise "can't find gcc on the server"
+
+    def system_requirements(self):
+        print("GCC_SYSTEM_REQUIREMENTS")
 
     # def requirements(self):
     #     self.requires("bs4/4.10.0")
-    def validate(self):
-        print("VALIDATION")
-        # self.options.source_url = str(self.options.source_url)
+
 
     def package_id(self):
-        print("PACKAGE_ID")
+        print("GCC_PACKAGE_ID")
         self.info.settings_target = self.settings_target
         # We only want the ``arch`` setting
 
         # self.info.settings_target.rm_safe("os")
         self.info.settings_target.rm_safe("compiler")
         self.info.settings_target.rm_safe("build_type")
+        # self.options.rm_safe("bin_url")
+
+
+
 
     def source(self):
-        print("SOURCE")
+        print("GCC_SOURCE")
+        url = os.getenv("URL")
+        print("URL: ", url)
+        with open(f"source_url.txt", "w") as file:
+            file.write(url)
+
+    def deploy(self):
+        print("GCC_DEPLOY")
+        # This method can be used to deploy files on the system after package is installed
+        # For example, to copy binaries to a specific folder
+        pass
+    def export(self):
+        print("GCC_EXPORT")
+        # This method can be used to deploy files on the system after package is installed
+        # For example, to copy binaries to a specific folder
+        pass
+    def imports(self):
+        print("GCC_PACKAGE_INFO")
+
+        # Add the path to the CMake modules
+        url = open(self.package_folder + "/source_url.txt", "w").read()
+
+
 
     def build(self):
-        print("BUILD")
+        print("GCC_BUILD")
+
+
 
     def package(self):
-        print("PACKAGE")
-        url = os.getenv("URL")
-        if not url:
-
-            raise ValueError(f"Set valid gcc url in options. now in is {url}")
-        try:
-            files = list_artifactory_folder(os.getenv("URL"))
-            self.sha, self.archive_name = have_sha256_and_filename(os.getenv("URL"))
-            print(f"SHA: {self.sha}")
-            print(f"Filename: {self.archive_name}")
-        except FileNotFoundError as e:
-            print(e)
-        get(self, f"{url}/{self.archive_name}",
-            sha256=self.sha, strip_root=True)
-        host, target, vers, triple = parse_toolchain_filename(self.archive_name)
-        dirs_to_copy = [triple, "bin", "include", "lib", "libexec"]
+        print("GCC_PACKAGE")
         copy(self, "*.cmake", src=self.source_folder, dst=self.package_folder + "/cmake")
-        for dir_name in dirs_to_copy:
-            copy(self, pattern=f"{dir_name}/*", src=self.build_folder, dst=self.package_folder, keep_path=True)
-        template_path = os.path.join(self.package_folder, "cmake/arm_gcc_toolchain_template.cmake")
-        with open(template_path, "r+") as template_file:
-            template_content = template_file.read()
-            variables = {
-                "@TRIPLET@": triple,
-                "@PROCESSOR@": target.arch_cmake(),
-                "@SYSTEM@": target.os_cmake(),
-                "@CROSSCOMPILING@": "FALSE" if target.os == host.os else "TRUE"
-            }
-            for var, value in variables.items():
-                template_content = template_content.replace(var, value)
-            template_file.seek(0)
-            template_file.write(template_content)
-            # Обрезаем файл до текущей позиции курсора, чтобы удалить старое содержимое
-            template_file.truncate()
-            template_file.close()
+        copy(self, "source_url.txt", src=self.source_folder, dst=self.package_folder)
 
-
-    def source(self):
-        print("SOURCE")
 
     def package_info(self):
         print("PACKAGE_INFO")
-
-        # self.cpp_info.bindirs.append(os.path.join(self.package_folder, "arm-none-eabi", "bin"))
-
-        # Read the template file
-        template_path = os.path.join(self.package_folder, "cmake/arm_gcc_toolchain_template.cmake")
-        with open(template_path, "r") as template_file:
-            template_content = template_file.read()
-            # Replace placeholders with actual values
-            config_content = template_content.replace("@TOOLS_PATH@", self.package_folder)
-            template_file.close()
-
         toolchain_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain.cmake")
-        with open(toolchain_path, "w") as toolchain_file:
-            toolchain_file.write(config_content)
-            toolchain_file.close()
-
-
         self.conf_info.define("tools.cmake.cmaketoolchain:user_toolchain", [toolchain_path])
-
-        # Add the path to the CMake modules
         self.cpp_info.builddirs.append(os.path.join(self.package_folder, "cmake"))
         self.cpp_info.includedirs.append(os.path.join(self.package_folder, "include"))
 
+        with open(self.package_folder + "/source_url.txt", "r") as file:
+            toolchain_url = file.read()
+        file.close()
+
+        sha, filename = have_sha256_and_filename(str(toolchain_url))
+        host, target, vers, triple = parse_toolchain_filename(filename)
+
+        template_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain-template.cmake")
+        cmake_toolchain_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain.cmake")
+        gcc_path = f"{self.package_folder}/../GCC"
+        # Используем регулярное выражение для удаления всех букв
+        version_without_chars = re.sub(r'[a-zA-Z]', '', self.version)
+        print("version: ", version_without_chars)
+        variables = {
+            "@TOOLS_PATH@": gcc_path,
+            "@TRIPLET@": triple,
+            "@PROCESSOR@": target.arch_cmake(),
+            "@SYSTEM@": target.os_cmake(),
+            "@VERSION@": version_without_chars,
+            "@CROSSCOMPILING@": "FALSE" if target.os == host.os else "TRUE"
+        }
+        with open(template_path, "r") as template_file:
+            template_content = template_file.read()
+            template_file.close()
+        for var, value in variables.items():
+            template_content = template_content.replace(var, value)
+
+        with open(cmake_toolchain_path, "w") as toolchain_file:
+            toolchain_file.write(template_content)
+            toolchain_file.close()
+        if not os.path.exists(gcc_path):
+            self.build_gcc(toolchain_url, gcc_path)
+
+
+
+
+        # self.build_gcc(url)
+
+
+
+
     def generate(self):
-        print("GENERATE")
+        print("GCC_GENERATE")
 
 #тестовая строка
-#export URL="http://artifactory.local:80/artifactory/arm-tools/GCC_13.2/x86_64%20Linux%20hosted%20cross%20toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . --profile:host=./profiles/armv7 --profile:build=./profiles/linux_x86_64 --build-require --version=13.2.rel1.
+#export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/x86_64_Linux_hosted_cross_toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . --profile:host=./profiles/armv7 --profile:build=./profiles/linux_x86_64 --build-require --version=13.2.rel1
+#conan list arm-gcc/*:*
+#conan upload arm-gcc/13.2.rel1 -r=arm-gcc
+# export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/x86_64_Linux_hosted_cross_toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . -s  arch=armv7 -s  os=baremetal -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Linux -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.2.rel1 --build-require
+

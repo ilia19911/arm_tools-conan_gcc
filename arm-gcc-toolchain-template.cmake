@@ -78,20 +78,25 @@ SET(CMAKE_CXX_CREATE_STATIC_LIBRARY "<CMAKE_AR> -crs <TARGET> <LINK_FLAGS> <OBJE
 SET(CMAKE_C_FLAGS_DEBUG             "-Og -g -gdwarf-2"  CACHE INTERNAL "c compiler flags debug")
 SET(CMAKE_CXX_FLAGS_DEBUG           "-Og -g -gdwarf-2"  CACHE INTERNAL "cxx compiler flags debug")
 SET(CMAKE_ASM_FLAGS_DEBUG           "-g"                CACHE INTERNAL "asm compiler flags debug")
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    ""                  CACHE INTERNAL "linker flags debug")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    "--specs=rdimon.specs"                  CACHE INTERNAL "linker flags debug")
 SET(CMAKE_C_FLAGS_RELEASE           "-O3 -flto"         CACHE INTERNAL "c compiler flags release")
 SET(CMAKE_CXX_FLAGS_RELEASE         "-O3 -flto"         CACHE INTERNAL "cxx compiler flags release")
 SET(CMAKE_ASM_FLAGS_RELEASE         ""                  CACHE INTERNAL "asm compiler flags release")
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE  "-flto"             CACHE INTERNAL "linker flags release")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE  "--specs=nosys.specs -flto"             CACHE INTERNAL "linker flags release")
 
 
 set(GCC_LINKER_FLAGS "-Wl,--gc-sections -Wl,--print-memory-usage -Wl,-V -Wl,--cref ${V}")
-SET(GCC_COMPILE_FLAGS "-Wall -ffunction-sections -fdata-sections ${V}")
+SET(GCC_COMPILE_FLAGS "-Wall -masm-syntax-unified -fomit-frame-pointer -ffunction-sections -fdata-sections ${V}")
 SET(GCC_ASM_COMPILE_FLAGS "${V}")
+set(GCC_SYSTEM_INCLUDE
+        @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include
+        @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include-fixed
+        @TOOLS_PATH@/@TRIPLET@/include CACHE STRING "include gcc files")
+
 
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm AND CMAKE_SYSTEM_NAME STREQUAL Generic)
-    set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -specs=nano.specs -specs=nosys.specs -mthumb")
-    set(GCC_LINKER_FLAGS "${GCC_LINKER_FLAGS} -specs=nano.specs -specs=nosys.specs")
+    set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -mthumb")
+    set(GCC_LINKER_FLAGS "${GCC_LINKER_FLAGS}  ")
     # дополнительное описание переопределения стандартного ввода и вывода --specs=rdimon.specs и прочее
     #https://developer.arm.com/documentation/109845/latest/
 endif ()
@@ -145,8 +150,8 @@ if(ARM_ARCH AND NOT ARM_TUNE)
 endif ()
 
 
-set(CMAKE_C_FLAGS   "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  CACHE INTERNAL "c compiler flags ")
-set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  CACHE INTERNAL "cpp compiler flags ")
+set(CMAKE_C_FLAGS   "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
+set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} "  CACHE INTERNAL "cpp compiler flags ")
 SET(CMAKE_ASM_FLAGS "${GCC_ASM_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}" CACHE INTERNAL "ASM compiler common flags")
 SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  CACHE INTERNAL "linker flags")
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_FILE})
