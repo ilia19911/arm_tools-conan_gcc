@@ -257,7 +257,8 @@ class ArmGccConan(ConanFile):
     def package_info(self):
         print("PACKAGE_INFO")
         toolchain_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain.cmake")
-        self.conf_info.define("tools.cmake.cmaketoolchain:user_toolchain", [toolchain_path])
+        # self.conf_info.define("tools.cmake.cmaketoolchain:user_toolchain", [toolchain_path])
+        self.conf_info.append("tools.cmake.cmaketoolchain:user_toolchain", toolchain_path)
         self.cpp_info.builddirs.append(os.path.join(self.package_folder, "cmake"))
         self.cpp_info.includedirs.append(os.path.join(self.package_folder, "include"))
 

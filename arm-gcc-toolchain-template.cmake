@@ -79,10 +79,10 @@ SET(CMAKE_C_FLAGS_DEBUG             "-Og -g -gdwarf-2"  CACHE INTERNAL "c compil
 SET(CMAKE_CXX_FLAGS_DEBUG           "-Og -g -gdwarf-2"  CACHE INTERNAL "cxx compiler flags debug")
 SET(CMAKE_ASM_FLAGS_DEBUG           "-g"                CACHE INTERNAL "asm compiler flags debug")
 SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    "--specs=rdimon.specs"                  CACHE INTERNAL "linker flags debug")
-SET(CMAKE_C_FLAGS_RELEASE           "-O3 -flto"         CACHE INTERNAL "c compiler flags release")
-SET(CMAKE_CXX_FLAGS_RELEASE         "-O3 -flto"         CACHE INTERNAL "cxx compiler flags release")
+SET(CMAKE_C_FLAGS_RELEASE           " -Ofast -gdwarf-2"         CACHE INTERNAL "c compiler flags release")
+SET(CMAKE_CXX_FLAGS_RELEASE         " -Ofast -gdwarf-2"         CACHE INTERNAL "cxx compiler flags release")
 SET(CMAKE_ASM_FLAGS_RELEASE         ""                  CACHE INTERNAL "asm compiler flags release")
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE  "--specs=nosys.specs -flto"             CACHE INTERNAL "linker flags release")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE  "--specs=rdimon.specs -flto"             CACHE INTERNAL "linker flags release")
 
 
 set(GCC_LINKER_FLAGS "-Wl,--gc-sections -Wl,--print-memory-usage -Wl,-V -Wl,--cref ${V}")
@@ -155,7 +155,9 @@ set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} "  CACHE IN
 SET(CMAKE_ASM_FLAGS "${GCC_ASM_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}" CACHE INTERNAL "ASM compiler common flags")
 SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  CACHE INTERNAL "linker flags")
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_FILE})
-include_directories( SYSTEM PRIVATE ${GCC_SYSTEM_INCLUDE})
+include_directories( ${GCC_SYSTEM_INCLUDE})
+
+#add_link_options("-Wl,--start-group")
 
 MESSAGE(STATUS "CMAKE_SYSTEM_NAME: " ${CMAKE_SYSTEM_NAME})
 MESSAGE(STATUS "CMAKE_SYSTEM_PROCESSOR: " ${CMAKE_SYSTEM_PROCESSOR})
