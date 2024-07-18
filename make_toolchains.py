@@ -46,8 +46,10 @@ for folder in folders:
     # print(folder)
     host, target, version, _ = tc_info.parse_toolchain_filename(filename)
     # print(host.os, target.os)
-    # if host.os == tc_info.OperationSystems.Linux and host.arch == tc_info.Architectures.x86_64 and target.os\
-    #         == tc_info.OperationSystems.Generic and target.arch == tc_info.Architectures.arm:
+    # if host.os != tc_info.OperationSystems.Windows or host.arch != tc_info.Architectures.x86_64 or target.os\
+    #         != tc_info.OperationSystems.Generic or target.arch != tc_info.Architectures.arm:
+    #     continue
+
     v = version.split('.')[0]
     s = "-s "
     s_b = "-s:b "

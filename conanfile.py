@@ -5,12 +5,12 @@ import re
 import requests
 from urllib.parse import urljoin
 from enum import Enum
-try:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', "bs4"])
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', "conan"])
-except subprocess.CalledProcessError as e:
-    print(f"Error installing package bs4: {e}")
-    sys.exit(1)
+# try:
+#     subprocess.check_call([sys.executable, '-m', 'pip', 'install', "bs4"])
+#     subprocess.check_call([sys.executable, '-m', 'pip', 'install', "conan"])
+# except subprocess.CalledProcessError as e:
+#     print(f"Error installing package bs4: {e}")
+#     sys.exit(1)
 
 from conan import ConanFile
 from conan.tools.files import get, copy
@@ -154,18 +154,6 @@ class ArmGccConan(ConanFile):
     package_type = "application"
     exports_sources = "arm-gcc-toolchain-template.cmake", "source_url.txt"
 
-    # generators = "CMakeDeps"
-
-    # def generate_config(self, template_path, dest_path, variables):
-    #
-    #     with open(template_path, "r") as template_file:
-    #         template_content = template_file.read()
-    #         for var, value in variables.items():
-    #             template_content = template_content.replace(var, value)
-    #         with open(dest_path, "w") as dest_file:
-    #             dest_file.write(template_content)
-    #             dest_file.close()
-    #         template_file.close()
 
     def build_gcc(self, url, dest):
         print("toolchain_url: ", str(url))
@@ -183,20 +171,6 @@ class ArmGccConan(ConanFile):
     def config_options(self):
         print("GCC_CONFIG_OPTIONS")
 
-    def validate(self):
-        print("GCC_VALIDATION")
-        # url = open(f"{self.source_folder}/source_url.txt", "r").read()
-        # print("gcc url is:", url)
-        # sha, filename = have_sha256_and_filename(str(url))
-        # host, target, vers, triple = parse_toolchain_filename(filename)
-        # if (host.os_conan() == self.settings.os and
-        #         host.arch_conan() == self.settings.arch and
-        #         target.os_conan() == self.settings_target.os and
-        #         target.arch_conan() == self.settings_target.arch and
-        #         self.version == vers):
-        #     print("gcc has found")
-        # else:
-        #     raise "can't find gcc on the server"
 
     def system_requirements(self):
         print("GCC_SYSTEM_REQUIREMENTS")
@@ -222,34 +196,16 @@ class ArmGccConan(ConanFile):
         print("GCC_SOURCE")
         url = os.getenv("URL")
         print("URL: ", url)
-        with open(f"source_url.txt", "w") as file:
+        with open(f"source_url.txt", "w", encoding='utf-8') as file:
             file.write(url)
-
-    def deploy(self):
-        print("GCC_DEPLOY")
-        # This method can be used to deploy files on the system after package is installed
-        # For example, to copy binaries to a specific folder
-        pass
-    def export(self):
-        print("GCC_EXPORT")
-        # This method can be used to deploy files on the system after package is installed
-        # For example, to copy binaries to a specific folder
-        pass
-    def imports(self):
-        print("GCC_PACKAGE_INFO")
-
-        # Add the path to the CMake modules
-        url = open(self.package_folder + "/source_url.txt", "w").read()
-
-
-
-    def build(self):
-        print("GCC_BUILD")
-
 
 
     def package(self):
         print("GCC_PACKAGE")
+        url = os.getenv("URL")
+        print("URL: ", url)
+        with open(f"source_url.txt", "w", encoding='utf-8') as file:
+            file.write(url)
         copy(self, "*.cmake", src=self.source_folder, dst=self.package_folder + "/cmake")
         copy(self, "source_url.txt", src=self.source_folder, dst=self.package_folder)
 
@@ -262,7 +218,7 @@ class ArmGccConan(ConanFile):
         self.cpp_info.builddirs.append(os.path.join(self.package_folder, "cmake"))
         self.cpp_info.includedirs.append(os.path.join(self.package_folder, "include"))
 
-        with open(self.package_folder + "/source_url.txt", "r") as file:
+        with open(self.package_folder + "/source_url.txt", "r", encoding='utf-8') as file:
             toolchain_url = file.read()
         file.close()
 
@@ -272,10 +228,14 @@ class ArmGccConan(ConanFile):
         template_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain-template.cmake")
         cmake_toolchain_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain.cmake")
         gcc_path = f"{self.package_folder}/../GCC"
+        # Замена обратных слешей на прямые слеши
+        gcc_path = gcc_path.replace("\\", "/")
         # Используем регулярное выражение для удаления всех букв
         version_without_chars = re.sub(r'[a-zA-Z]', '', self.version)
+        pref = "" if host.os == OperationSystems.Linux else ".exe" if host.os == OperationSystems.Windows else ".pkg"
         print("version: ", version_without_chars)
         variables = {
+            "@PREFIX@": pref,
             "@TOOLS_PATH@": gcc_path,
             "@TRIPLET@": triple,
             "@PROCESSOR@": target.arch_cmake(),
@@ -283,24 +243,17 @@ class ArmGccConan(ConanFile):
             "@VERSION@": version_without_chars,
             "@CROSSCOMPILING@": "FALSE" if target.os == host.os else "TRUE"
         }
-        with open(template_path, "r") as template_file:
+        with open(template_path, "r", encoding='utf-8') as template_file:
             template_content = template_file.read()
             template_file.close()
         for var, value in variables.items():
             template_content = template_content.replace(var, value)
 
-        with open(cmake_toolchain_path, "w") as toolchain_file:
+        with open(cmake_toolchain_path, "w", encoding='utf-8') as toolchain_file:
             toolchain_file.write(template_content)
             toolchain_file.close()
         if not os.path.exists(gcc_path):
             self.build_gcc(toolchain_url, gcc_path)
-
-
-
-
-        # self.build_gcc(url)
-
-
 
 
     def generate(self):
@@ -311,4 +264,5 @@ class ArmGccConan(ConanFile):
 #conan list arm-gcc/*:*
 #conan upload arm-gcc/13.2.rel1 -r=arm-gcc
 # export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/x86_64_Linux_hosted_cross_toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . -s  arch=armv7 -s  os=baremetal -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Linux -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.2.rel1 --build-require
-
+#windows
+#export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/Windows%20%28mingw-w64-i686%29%20hosted%20cross%20toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . -s  arch=armv7 -s  os=baremetal -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Windows -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.2.rel1 --build-require
