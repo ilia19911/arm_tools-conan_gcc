@@ -5,16 +5,9 @@ import re
 import requests
 from urllib.parse import urljoin
 from enum import Enum
-# try:
-#     subprocess.check_call([sys.executable, '-m', 'pip', 'install', "bs4"])
-#     subprocess.check_call([sys.executable, '-m', 'pip', 'install', "conan"])
-# except subprocess.CalledProcessError as e:
-#     print(f"Error installing package bs4: {e}")
-#     sys.exit(1)
-
 from conan import ConanFile
 from conan.tools.files import get, copy
-from bs4 import BeautifulSoup
+
 
 
 #имя это название в conan , значение в cmake
@@ -97,6 +90,7 @@ def have_sha256_and_filename(folder_url, auth=None):
 
 def list_artifactory_folder(folder_url, auth=None):
     try:
+        from bs4 import BeautifulSoup
         response = requests.get(folder_url, auth=auth)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -152,7 +146,7 @@ class ArmGccConan(ConanFile):
     topics = ("conan", "arm-gcc", "toolchain")
     settings = "os", "arch"
     package_type = "application"
-    exports_sources = "arm-gcc-toolchain-template.cmake", "source_url.txt"
+    exports_sources = "arm-gcc-toolchain-template.cmake", "source_url.txt", "filename.txt"
 
 
     def build_gcc(self, url, dest):
@@ -198,6 +192,11 @@ class ArmGccConan(ConanFile):
         print("URL: ", url)
         with open(f"source_url.txt", "w", encoding='utf-8') as file:
             file.write(url)
+        sha, filename = have_sha256_and_filename(str(url))
+        print("FILE NAME: ", filename)
+        with open(f"filename.txt", "w", encoding='utf-8') as file:
+            file.write(filename)
+
 
 
     def package(self):
@@ -208,6 +207,12 @@ class ArmGccConan(ConanFile):
             file.write(url)
         copy(self, "*.cmake", src=self.source_folder, dst=self.package_folder + "/cmake")
         copy(self, "source_url.txt", src=self.source_folder, dst=self.package_folder)
+        copy(self, "filename.txt", src=self.source_folder, dst=self.package_folder)
+        gcc_path = f"{self.package_folder}/GCC"
+        # Замена обратных слешей на прямые слеши
+        gcc_path = gcc_path.replace("\\", "/")
+        if not os.path.exists(gcc_path):
+            self.build_gcc(url, gcc_path)
 
 
     def package_info(self):
@@ -218,16 +223,15 @@ class ArmGccConan(ConanFile):
         self.cpp_info.builddirs.append(os.path.join(self.package_folder, "cmake"))
         self.cpp_info.includedirs.append(os.path.join(self.package_folder, "include"))
 
-        with open(self.package_folder + "/source_url.txt", "r", encoding='utf-8') as file:
-            toolchain_url = file.read()
+        with open(self.package_folder + "/filename.txt", "r", encoding='utf-8') as file:
+            filename = file.read()
         file.close()
 
-        sha, filename = have_sha256_and_filename(str(toolchain_url))
         host, target, vers, triple = parse_toolchain_filename(filename)
 
         template_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain-template.cmake")
         cmake_toolchain_path = os.path.join(self.package_folder, "cmake/arm-gcc-toolchain.cmake")
-        gcc_path = f"{self.package_folder}/../GCC"
+        gcc_path = f"{self.package_folder}/GCC"
         # Замена обратных слешей на прямые слеши
         gcc_path = gcc_path.replace("\\", "/")
         # Используем регулярное выражение для удаления всех букв
@@ -252,8 +256,7 @@ class ArmGccConan(ConanFile):
         with open(cmake_toolchain_path, "w", encoding='utf-8') as toolchain_file:
             toolchain_file.write(template_content)
             toolchain_file.close()
-        if not os.path.exists(gcc_path):
-            self.build_gcc(toolchain_url, gcc_path)
+
 
 
     def generate(self):
