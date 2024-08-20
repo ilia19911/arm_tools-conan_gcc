@@ -146,7 +146,7 @@ class ArmGccConan(ConanFile):
     topics = ("conan", "arm-gcc", "toolchain")
     settings = "os", "arch"
     package_type = "application"
-    exports_sources = "arm-gcc-toolchain-template.cmake", "source_url.txt", "filename.txt"
+    exports_sources = "arm-gcc-toolchain-template.cmake"
 
 
     def build_gcc(self, url, dest):
@@ -188,14 +188,11 @@ class ArmGccConan(ConanFile):
 
     def source(self):
         print("GCC_SOURCE")
-        url = os.getenv("URL")
-        print("URL: ", url)
-        with open(f"source_url.txt", "w", encoding='utf-8') as file:
-            file.write(url)
-        sha, filename = have_sha256_and_filename(str(url))
-        print("FILE NAME: ", filename)
-        with open(f"filename.txt", "w", encoding='utf-8') as file:
-            file.write(filename)
+        # url = os.getenv("URL")
+        # print("URL: ", url)
+        # with open(f"source_url.txt", "w", encoding='utf-8') as file:
+        #     file.write(url)
+
 
 
 
@@ -205,6 +202,10 @@ class ArmGccConan(ConanFile):
         print("URL: ", url)
         with open(f"source_url.txt", "w", encoding='utf-8') as file:
             file.write(url)
+        sha, filename = have_sha256_and_filename(str(url))
+        print("FILE NAME: ", filename)
+        with open(f"filename.txt", "w", encoding='utf-8') as file:
+            file.write(filename)
         copy(self, "*.cmake", src=self.source_folder, dst=self.package_folder + "/cmake")
         copy(self, "source_url.txt", src=self.source_folder, dst=self.package_folder)
         copy(self, "filename.txt", src=self.source_folder, dst=self.package_folder)
