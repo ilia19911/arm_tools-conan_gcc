@@ -76,6 +76,7 @@ SET(CMAKE_ASM_OUTPUT_EXTENSION  .o)
 SET(CMAKE_C_CREATE_STATIC_LIBRARY   "<CMAKE_AR> -crs <TARGET> <LINK_FLAGS> <OBJECTS>" )
 SET(CMAKE_CXX_CREATE_STATIC_LIBRARY "<CMAKE_AR> -crs <TARGET> <LINK_FLAGS> <OBJECTS>" )
 
+set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
 #common release or debbug flags
 SET(CMAKE_C_FLAGS_DEBUG             "-Og -g -gdwarf-2"  CACHE INTERNAL "c compiler flags debug")
 SET(CMAKE_CXX_FLAGS_DEBUG           "-Og -g -gdwarf-2"  CACHE INTERNAL "cxx compiler flags debug")
@@ -109,9 +110,9 @@ endif ()
 # следует использовать либо -mcpu, либо -march + -mtune но никак не вместе, иначе оптимизация не будет применена или будет непредсказуемой
 # -mcpu точно говорит компилятору под какой процессор надо оптимизировать, тогда как -march + -mtune будут давать приближенный, но возможно не точный результат оптимизации
 # информация по теме https://community.arm.com/arm-community-blogs/b/tools-software-ides-blog/posts/compiler-flags-across-architectures-march-mtune-and-mcpu
-function(SET_TARGET_COMPIL_OPTIONS TARGET ARM_CPU)
+function(MAKE_GCC_INTERFACE NAME ARM_CPU)
     set(SPECIFIC_PLATFORM_FLAGS "")
-#    message(STATUS "You use ARM_CPU and it's perfect!")
+    #    message(STATUS "You use ARM_CPU and it's perfect!")
     set(SPECIFIC_PLATFORM_FLAGS "${SPECIFIC_PLATFORM_FLAGS} -mfpu=auto")
     #    set(ABI_MODE hard)
     get_last_multi_lib("hard")
@@ -128,22 +129,30 @@ function(SET_TARGET_COMPIL_OPTIONS TARGET ARM_CPU)
     endif ()
     SET(SPECIFIC_PLATFORM_FLAGS "${SPECIFIC_PLATFORM_FLAGS} -mcpu=${ARM_CPU}")
 
-#    set(CMAKE_C_FLAGS   "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
-#    set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} "  CACHE INTERNAL "cpp compiler flags ")
-#    SET(CMAKE_ASM_FLAGS "${GCC_ASM_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}" CACHE INTERNAL "ASM compiler common flags")
-#    SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  CACHE INTERNAL "linker flags")
+    #    set(CMAKE_C_FLAGS   "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
+    #    set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} "  CACHE INTERNAL "cpp compiler flags ")
+    #    SET(CMAKE_ASM_FLAGS "${GCC_ASM_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}" CACHE INTERNAL "ASM compiler common flags")
+    #    SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  CACHE INTERNAL "linker flags")
 
-    # Устанавливаем флаги для C кода
-    target_compile_options(my_executable PUBLIC ${SPECIFIC_PLATFORM_FLAGS} -std=gnu11)
+    add_library(${NAME} INTERFACE)
+    string(REPLACE " " ";" SPECIFIC_PLATFORM_FLAGS_LIST "${SPECIFIC_PLATFORM_FLAGS}")
+
+    target_compile_options(${NAME} INTERFACE $<$<COMPILE_LANGUAGE:C>: ${SPECIFIC_PLATFORM_FLAGS_LIST}>)
     # Устанавливаем флаги для C++ кода
-    target_compile_options(my_executable PUBLIC $<$<COMPILE_LANGUAGE:CXX>: ${SPECIFIC_PLATFORM_FLAGS}>)
+    target_compile_options(${NAME} INTERFACE $<$<COMPILE_LANGUAGE:CXX>: ${SPECIFIC_PLATFORM_FLAGS_LIST}>)
     # Устанавливаем флаги для ASM кода
-    target_compile_options(my_executable PUBLIC $<$<COMPILE_LANGUAGE:ASM>: ${SPECIFIC_PLATFORM_FLAGS}>)
+    target_compile_options(${NAME} INTERFACE $<$<COMPILE_LANGUAGE:ASM>: ${SPECIFIC_PLATFORM_FLAGS_LIST}>)
     # Устанавливаем флаги для линкера
-    target_link_options(my_executable PUBLIC ${SPECIFIC_PLATFORM_FLAGS})
+    target_link_options(${NAME} INTERFACE ${SPECIFIC_PLATFORM_FLAGS_LIST})
 
 
 endfunction()
+
+MAKE_GCC_INTERFACE(CORTEX_M0 cortex-m0)
+MAKE_GCC_INTERFACE(CORTEX_M1 cortex-m1)
+MAKE_GCC_INTERFACE(CORTEX_M3 cortex-m3)
+MAKE_GCC_INTERFACE(CORTEX_M4 cortex-m4)
+MAKE_GCC_INTERFACE(CORTEX_M7 cortex-m7)
 include_directories( ${GCC_SYSTEM_INCLUDE})
 
 #add_link_options("-Wl,--start-group")
