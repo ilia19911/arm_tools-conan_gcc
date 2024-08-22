@@ -148,6 +148,33 @@ function(MAKE_GCC_INTERFACE NAME ARM_CPU)
 
 endfunction()
 
+function(ADD_GLOB_COMPILE_OPTIONS ARM_CPU)
+    set(SPECIFIC_PLATFORM_FLAGS "")
+    #    message(STATUS "You use ARM_CPU and it's perfect!")
+    set(SPECIFIC_PLATFORM_FLAGS "${SPECIFIC_PLATFORM_FLAGS} -mfpu=auto")
+    #    set(ABI_MODE hard)
+    get_last_multi_lib("hard")
+    if(ABI_MODE STREQUAL hard)
+        set(SPECIFIC_PLATFORM_FLAGS "${SPECIFIC_PLATFORM_FLAGS} -mfloat-abi=hard")
+    else ()
+        #        set(ABI_MODE soft)
+        get_last_multi_lib("soft")
+        if(ABI_MODE STREQUAL soft OR ABI_MODE STREQUAL nofp )
+            set(SPECIFIC_PLATFORM_FLAGS "${SPECIFIC_PLATFORM_FLAGS} -mfloat-abi=soft")
+        else ()
+            message(FATAL_ERROR "Wrong processor name ${ARM_CPU}")
+        endif ()
+    endif ()
+    SET(SPECIFIC_PLATFORM_FLAGS "${SPECIFIC_PLATFORM_FLAGS} -mcpu=${ARM_CPU}")
+
+    set(CMAKE_C_FLAGS   "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
+    set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} "  CACHE INTERNAL "cpp compiler flags ")
+    SET(CMAKE_ASM_FLAGS "${GCC_ASM_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}" CACHE INTERNAL "ASM compiler common flags")
+    SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  CACHE INTERNAL "linker flags")
+
+
+endfunction()
+
 MAKE_GCC_INTERFACE(CORTEX_M0 cortex-m0)
 MAKE_GCC_INTERFACE(CORTEX_M1 cortex-m1)
 MAKE_GCC_INTERFACE(CORTEX_M3 cortex-m3)
