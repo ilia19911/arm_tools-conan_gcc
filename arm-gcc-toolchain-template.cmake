@@ -104,6 +104,11 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm AND CMAKE_SYSTEM_NAME STREQUAL Generic)
     #https://developer.arm.com/documentation/109845/latest/
 endif ()
 
+set(CMAKE_C_FLAGS   "${GCC_COMPILE_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
+set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} "  CACHE INTERNAL "cpp compiler flags ")
+SET(CMAKE_ASM_FLAGS "${GCC_ASM_COMPILE_FLAGS}" CACHE INTERNAL "ASM compiler common flags")
+SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS} "  CACHE INTERNAL "linker flags")
+#set(CMAKE_STATIC_LINKER_FLAGS "${GCC_LINKER_FLAGS} "  CACHE INTERNAL "linker flags")
 
 #СПЕЦИАЛЬНЫЕ ФЛАГИ КОМПИЛЯЦИИ ARM: -mtune -march -mcpu .
 #-mcpu имеет меньший приоритет для компилятора (но более приоритетен в использовании) и будет переписан флагами -mtune и -march
@@ -128,11 +133,6 @@ function(MAKE_GCC_INTERFACE NAME ARM_CPU)
         endif ()
     endif ()
     SET(SPECIFIC_PLATFORM_FLAGS "${SPECIFIC_PLATFORM_FLAGS} -mcpu=${ARM_CPU}")
-
-    #    set(CMAKE_C_FLAGS   "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
-    #    set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} "  CACHE INTERNAL "cpp compiler flags ")
-    #    SET(CMAKE_ASM_FLAGS "${GCC_ASM_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}" CACHE INTERNAL "ASM compiler common flags")
-    #    SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  CACHE INTERNAL "linker flags")
 
     add_library(${NAME} INTERFACE)
     string(REPLACE " " ";" SPECIFIC_PLATFORM_FLAGS_LIST "${SPECIFIC_PLATFORM_FLAGS}")
@@ -167,11 +167,11 @@ function(ADD_GLOB_COMPILE_OPTIONS ARM_CPU)
     endif ()
     SET(SPECIFIC_PLATFORM_FLAGS "${SPECIFIC_PLATFORM_FLAGS} -mcpu=${ARM_CPU}")
 
-    set(CMAKE_C_FLAGS   "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
-    set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} "  CACHE INTERNAL "cpp compiler flags ")
-    SET(CMAKE_ASM_FLAGS "${GCC_ASM_COMPILE_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}" CACHE INTERNAL "ASM compiler common flags")
-    SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  CACHE INTERNAL "linker flags")
-
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} -std=gnu11"  PARENT_SCOPE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPECIFIC_PLATFORM_FLAGS} "  PARENT_SCOPE)
+    SET(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}" PARENT_SCOPE)
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SPECIFIC_PLATFORM_FLAGS}"  PARENT_SCOPE)
+    message("SPECIFIC_PLATFORM_FLAGS: " ${SPECIFIC_PLATFORM_FLAGS})
 
 endfunction()
 
@@ -241,21 +241,4 @@ FUNCTION(STM32_PRINT_SIZE_OF_TARGETS TARGET)
     message(">>>  " ${FILENAME})
 
 
-ENDFUNCTION()
-
-FUNCTION(GET_SOFT_ABI)
-    # Вызов arm-none-eabi-gcc для получения списка мультибиблиотек
-    execute_process(
-            COMMAND arm-none-eabi-gcc -mcpu=cortex-a55 -mfpu=auto -mfloat-abi=hard --print-multi-dir
-            OUTPUT_VARIABLE MULTI_LIBS
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-    # Разбиваем вывод по строкам
-    string(REPLACE "\n" ";" MULTI_LIBS_LIST "${MULTI_LIBS}")
-
-    # Получаем последнюю строку после /
-    list(GET MULTI_LIBS_LIST -1 LAST_LINE)
-
-    message("Last line after /: ${LAST_LINE}")
 ENDFUNCTION()
