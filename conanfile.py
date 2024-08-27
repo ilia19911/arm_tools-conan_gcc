@@ -53,7 +53,8 @@ target_info = {
     'arm-none-linux-gnueabihf': HostInfo(Architectures.arm, OperationSystems.Linux),
     'aarch64-none-elf': HostInfo(Architectures.aarch64, OperationSystems.Generic),
     'aarch64-none-linux-gnu': HostInfo(Architectures.aarch64, OperationSystems.Linux),
-    'aarch64_be-none-linux-gnu': HostInfo(Architectures.aarch64, OperationSystems.Linux)
+    'aarch64_be-none-linux-gnu': HostInfo(Architectures.aarch64, OperationSystems.Linux),
+    'x86_64-w64-mingw32': HostInfo(Architectures.x86_64, OperationSystems.Windows)
 }
 
 host_info = {
@@ -103,13 +104,14 @@ def list_artifactory_folder(folder_url, auth=None):
 
 def parse_toolchain_filename(filename):
     # Определяем паттерн для имени файла
-    pattern = r'^.*?arm-gnu-toolchain-([\d\.]+\.rel\d+)-(mingw-w64-i686|x86_64|aarch64|darwin-x86_64|darwin-arm64)-(arm-none-eabi|arm-none-linux-gnueabihf|aarch64-none-elf|aarch64-none-linux-gnu|aarch64_be-none-linux-gnu)\.(zip|tar\.xz|pkg)'
+    pattern = r'^.*?(arm-gnu-toolchain|windows-native)-([\d\.]+\.rel\d+)-(mingw-w64-i686|x86_64|aarch64|darwin-x86_64|darwin-arm64)-(arm-none-eabi|arm-none-linux-gnueabihf|aarch64-none-elf|aarch64-none-linux-gnu|aarch64_be-none-linux-gnu|x86_64-w64-mingw32)\.(zip|tar\.xz|pkg)'
     match = re.match(pattern, filename)
-
+    print(match)
     if not match:
         return None
 
-    version, host_arch, target_arch, _ = match.groups()
+
+    toolchain, version, host_arch, target_arch, _ = match.groups()
 
     return host_info[host_arch], target_info[target_arch], version, target_arch
 
@@ -266,7 +268,10 @@ class ArmGccConan(ConanFile):
 #тестовая строка
 #export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/x86_64_Linux_hosted_cross_toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . --profile:host=./profiles/armv7 --profile:build=./profiles/linux_x86_64 --build-require --version=13.2.rel1
 #conan list arm-gcc/*:*
-#conan upload arm-gcc/13.2.rel1 -r=arm-gcc
+#conan upload arm-gcc/13.2.rel1 -r=BREO
+#linux-arm-none-eabi
 # export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/x86_64_Linux_hosted_cross_toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . -s  arch=armv7 -s  os=baremetal -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Linux -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.2.rel1 --build-require
-#windows
-#export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/Windows%20%28mingw-w64-i686%29%20hosted%20cross%20toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . -s  arch=armv7 -s  os=baremetal -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Windows -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.2.rel1 --build-require
+#windows-arm-none-eabi
+#export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/Windows%20%28mingw-w64-i686%29%20hosted%20cross%20toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . -s  arch=armv7 -s  os=baremetal -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Windows -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.2.rel1 --build-require -r=BREO
+#windows-windows
+#export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/Windows%20native/" && conan create . -s  arch=x86_64 -s  os=Windows -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Windows -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.2.rel1 --build-require

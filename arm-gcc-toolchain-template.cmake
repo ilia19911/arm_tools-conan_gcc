@@ -5,6 +5,9 @@ SET(CMAKE_SYSTEM_NAME @SYSTEM@)
 SET(CMAKE_SYSTEM_PROCESSOR @PROCESSOR@) #arm, x86, x86_64, aarch64
 SET(CMAKE_CROSSCOMPILING @CROSSCOMPILING@)
 SET(CMAKE_VERBOSE_MAKEFILE TRUE)
+SET(CMAKE_C_COMPILER_ID "GNU")
+SET(CMAKE_CXX_COMPILER_ID "GNU")
+SET(CMAKE_ASM_COMPILER_ID "GNU")
 SET(ASM_OPTIONS "-x assembler-with-cpp")
 set(GCC ON)
 
@@ -81,25 +84,35 @@ set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler fl
 SET(CMAKE_C_FLAGS_DEBUG             "-Og -g -gdwarf-2"  CACHE INTERNAL "c compiler flags debug")
 SET(CMAKE_CXX_FLAGS_DEBUG           "-Og -g -gdwarf-2"  CACHE INTERNAL "cxx compiler flags debug")
 SET(CMAKE_ASM_FLAGS_DEBUG           "-g"                CACHE INTERNAL "asm compiler flags debug")
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    "--specs=rdimon.specs"                  CACHE INTERNAL "linker flags debug")
-SET(CMAKE_C_FLAGS_RELEASE           " -Ofast -gdwarf-2"         CACHE INTERNAL "c compiler flags release")
-SET(CMAKE_CXX_FLAGS_RELEASE         " -Ofast -gdwarf-2"         CACHE INTERNAL "cxx compiler flags release")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    ""                  CACHE INTERNAL "linker flags debug")
+SET(CMAKE_C_FLAGS_RELEASE           " -Ofast"         CACHE INTERNAL "c compiler flags release")
+SET(CMAKE_CXX_FLAGS_RELEASE         " -Ofast"         CACHE INTERNAL "cxx compiler flags release")
 SET(CMAKE_ASM_FLAGS_RELEASE         ""                  CACHE INTERNAL "asm compiler flags release")
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE  "--specs=rdimon.specs -flto"             CACHE INTERNAL "linker flags release")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE  "-flto"             CACHE INTERNAL "linker flags release")
 
+#cmake не находит стандартные библиотеки при билде под windows-windows . Не очень правильное решение, но пока лучше не нашел
+if(NOT CMAKE_SYSTEM_PROCESSOR  STREQUAL arm )
+    set(GCC_LIBRARY_PATHS "-L@TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@")
+endif ()
 
-set(GCC_LINKER_FLAGS "-Wl,--gc-sections -Wl,--print-memory-usage -Wl,-V -Wl,--cref ${V}")
-SET(GCC_COMPILE_FLAGS "-Wall -masm-syntax-unified -fomit-frame-pointer -ffunction-sections -fdata-sections ${V}")
+set(GCC_LINKER_FLAGS "${GCC_LIBRARY_PATHS} -Wl,--gc-sections -Wl,--print-memory-usage -Wl,-V -Wl,--cref ${V}")
+SET(GCC_COMPILE_FLAGS "${GCC_LIBRARY_PATHS} -Wall -fomit-frame-pointer -ffunction-sections -fdata-sections ${V}")
 SET(GCC_ASM_COMPILE_FLAGS "${V}")
 set(GCC_SYSTEM_INCLUDE
+#        @TOOLS_PATH@/lib
+#        @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@
         @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include
+        @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include/c++
+        @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include/c++/@TRIPLET@
         @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include-fixed
         @TOOLS_PATH@/@TRIPLET@/include CACHE STRING "include gcc files")
 
+include_directories( ${GCC_SYSTEM_INCLUDE})
 
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm AND CMAKE_SYSTEM_NAME STREQUAL Generic)
-    set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -mthumb")
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm )
+    set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -mthumb  -masm-syntax-unified ")
     set(GCC_LINKER_FLAGS "${GCC_LINKER_FLAGS}  ")
+    SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    "${CMAKE_EXE_LINKER_FLAGS_DEBUG} --specs=rdimon.specs"                  CACHE INTERNAL "linker flags debug")
     # дополнительное описание переопределения стандартного ввода и вывода --specs=rdimon.specs и прочее
     #https://developer.arm.com/documentation/109845/latest/
 endif ()
@@ -175,12 +188,14 @@ function(ADD_GLOB_COMPILE_OPTIONS ARM_CPU)
 
 endfunction()
 
-MAKE_GCC_INTERFACE(CORTEX_M0 cortex-m0)
-MAKE_GCC_INTERFACE(CORTEX_M1 cortex-m1)
-MAKE_GCC_INTERFACE(CORTEX_M3 cortex-m3)
-MAKE_GCC_INTERFACE(CORTEX_M4 cortex-m4)
-MAKE_GCC_INTERFACE(CORTEX_M7 cortex-m7)
-include_directories( ${GCC_SYSTEM_INCLUDE})
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
+    MAKE_GCC_INTERFACE(CORTEX_M0 cortex-m0)
+    MAKE_GCC_INTERFACE(CORTEX_M1 cortex-m1)
+    MAKE_GCC_INTERFACE(CORTEX_M3 cortex-m3)
+    MAKE_GCC_INTERFACE(CORTEX_M4 cortex-m4)
+    MAKE_GCC_INTERFACE(CORTEX_M7 cortex-m7)
+
+endif ()
 
 #add_link_options("-Wl,--start-group")
 
