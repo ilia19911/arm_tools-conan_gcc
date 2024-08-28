@@ -185,10 +185,10 @@ class ArmGccConan(ConanFile):
         if self.settings_target is not None:
             self.info.settings_target.rm_safe("compiler")
             self.info.settings_target.rm_safe("build_type")
-            if self.info.settings.arch == self.settings_target.arch:
-                self.info.settings_target.rm_safe("arch")
-            if self.info.settings.os == self.settings_target.os:
-                self.info.settings_target.rm_safe("os")
+            # if self.info.settings.arch == self.settings_target.arch:
+            #     self.info.settings_target.rm_safe("arch")
+            # if self.info.settings.os == self.settings_target.os:
+            #     self.info.settings_target.rm_safe("os")
 
 
         # self.options.rm_safe("bin_url")

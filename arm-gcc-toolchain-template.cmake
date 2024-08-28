@@ -92,7 +92,7 @@ SET(CMAKE_EXE_LINKER_FLAGS_RELEASE  "-flto"             CACHE INTERNAL "linker f
 
 #cmake не находит стандартные библиотеки при билде под windows-windows . Не очень правильное решение, но пока лучше не нашел
 if(NOT CMAKE_SYSTEM_PROCESSOR  STREQUAL arm )
-    set(GCC_LIBRARY_PATHS "-L@TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@")
+#    set(GCC_LIBRARY_PATHS "-L@TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@")
 endif ()
 
 set(GCC_LINKER_FLAGS "${GCC_LIBRARY_PATHS} -Wl,--gc-sections -Wl,--print-memory-usage -Wl,-V -Wl,--cref ${V}")
