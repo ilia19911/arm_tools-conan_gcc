@@ -55,7 +55,7 @@ target_info = {
     'aarch64-none-linux-gnu': HostInfo(Architectures.aarch64, OperationSystems.Linux),
     'aarch64_be-none-linux-gnu': HostInfo(Architectures.aarch64, OperationSystems.Linux),
     'x86_64-w64-mingw32': HostInfo(Architectures.x86_64, OperationSystems.Windows),
-    'x86_64-pc-linux-gnu': HostInfo(Architectures.x86_64, OperationSystems.Linux)
+    'x86_64-linux-gnu': HostInfo(Architectures.x86_64, OperationSystems.Linux)
 }
 
 host_info = {
@@ -105,7 +105,7 @@ def list_artifactory_folder(folder_url, auth=None):
 
 def parse_toolchain_filename(filename):
     # Определяем паттерн для имени файла
-    pattern = r'^.*?(arm-gnu-toolchain|windows-native|linux-native)-([\d\.]+\.rel\d+)-(mingw-w64-i686|x86_64|aarch64|darwin-x86_64|darwin-arm64)-(arm-none-eabi|arm-none-linux-gnueabihf|aarch64-none-elf|aarch64-none-linux-gnu|aarch64_be-none-linux-gnu|x86_64-w64-mingw32|x86_64-pc-linux-gnu)\.(zip|tar\.xz|pkg)'
+    pattern = r'^.*?(arm-gnu-toolchain|windows-native|linux-native)-([\d\.]+\.rel\d+)-(mingw-w64-i686|x86_64|aarch64|darwin-x86_64|darwin-arm64)-(arm-none-eabi|arm-none-linux-gnueabihf|aarch64-none-elf|aarch64-none-linux-gnu|aarch64_be-none-linux-gnu|x86_64-w64-mingw32|x86_64-linux-gnu)\.(zip|tar\.xz|pkg)'
     match = re.match(pattern, filename)
     print(match)
     if not match:
@@ -140,7 +140,7 @@ def collect_nested_toolchains(base_url, auth=None):
 
 class ArmGccConan(ConanFile):
     base_url = "http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/"
-    name = "arm-gcc"
+    name = "gcc"
     license = "GPL-3.0-only"
     homepage = ""
     url = ""
@@ -285,3 +285,7 @@ class ArmGccConan(ConanFile):
 #export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/Windows%20%28mingw-w64-i686%29%20hosted%20cross%20toolchains/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . -s  arch=armv7 -s  os=baremetal -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Windows -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.2 --build-require -r=BREO
 #windows-windows
 #export URL="http://192.168.71.113:8082/artifactory/arm-tools/GCC_13.2/Windows%20native/" && conan create . -s  arch=x86_64 -s  os=Windows -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Windows -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.2 --build-require
+
+
+#export URL="https://artifactory.nextcloud-iahve.ru/artifactory/arm-gcc/gcc_13.3/AArch32%20bare-metal%20target%20%28arm-none-eabi%29/" && conan create . -s  arch=armv7 -s  os=baremetal -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Linux -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.3 --build-require
+# export URL='https://artifactory.nextcloud-iahve.ru/artifactory/arm-gcc/gcc_13.3/linux_x86_native/' && conan create . -s  arch=x86_64 -s  os=Linux -s  compiler=gcc -s  compiler.version=13 -s  compiler.libcxx=libstdc++11 -s  compiler.cppstd=gnu23 -s  build_type=Release  -s:b  arch=x86_64 -s:b  os=Linux -s:b  compiler=gcc -s:b  compiler.version=13 -s:b  compiler.libcxx=libstdc++11 -s:b  compiler.cppstd=gnu23 -s:b  build_type=Release  --version=13.3 --build-require
