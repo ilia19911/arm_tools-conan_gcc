@@ -1,8 +1,5 @@
-#Тулчейн для использования в СТЦ БРЭО.
-#документация по версии GCC 13.2.rel1 #https://developer.arm.com/documentation/109845/latest/
-#Документация по опциям GCC https://gcc.gnu.org/onlinedocs/gcc-13.2.0/gcc/ARM-Options.html
 SET(CMAKE_SYSTEM_NAME @SYSTEM@)
-SET(CMAKE_SYSTEM_PROCESSOR @PROCESSOR@) #arm, x86, x86_64, aarch64
+SET(CMAKE_SYSTEM_PROCESSOR @PROCESSOR@) # arm, x86, x86_64, aarch64
 SET(CMAKE_CROSSCOMPILING @CROSSCOMPILING@)
 SET(CMAKE_VERBOSE_MAKEFILE TRUE)
 SET(CMAKE_C_COMPILER_ID "GNU")
@@ -13,7 +10,7 @@ set(GCC ON)
 
 if(GCC_VERBOSE)
     set(V "-v")
-endif ()
+endif()
 
 if(CMAKE_CROSSCOMPILING)
     INCLUDE(CMakeForceCompiler)
@@ -28,30 +25,29 @@ if(CMAKE_CROSSCOMPILING)
     # For libraries and headers in the target directories
     SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY CACHE INTERNAL "")
     SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY CACHE INTERNAL "")
-    SET(CMAKE_C_OUTPUT_EXTENSION    .o CACHE INTERNAL "")
-    SET(CMAKE_CXX_OUTPUT_EXTENSION  .o CACHE INTERNAL "")
-    SET(CMAKE_ASM_OUTPUT_EXTENSION  .o CACHE INTERNAL "")
-else ()
+    SET(CMAKE_C_OUTPUT_EXTENSION .o CACHE INTERNAL "")
+    SET(CMAKE_CXX_OUTPUT_EXTENSION .o CACHE INTERNAL "")
+    SET(CMAKE_ASM_OUTPUT_EXTENSION .o CACHE INTERNAL "")
+else()
     SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM BOTH CACHE INTERNAL "")
     SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH CACHE INTERNAL "")
     SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH CACHE INTERNAL "")
-endif ()
+endif()
 
 function(get_last_multi_lib mode)
-    # Вызов arm-none-eabi-gcc для получения списка мультибиблиотек
+    # Call arm-none-eabi-gcc to get a list of multi-libraries
     execute_process(
             COMMAND ${CMAKE_C_COMPILER} -mcpu=${ARM_CPU} -mfpu=auto -mfloat-abi=${mode} --print-multi-dir
             OUTPUT_VARIABLE MULTI_LIBS
             OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    # Разбиваем вывод по строкам
+    # Split the output by lines
     string(REPLACE "/" ";" MULTI_LIBS_LIST "${MULTI_LIBS}")
-    # Получаем последнюю строку после /
+    # Get the last line after "/"
     list(GET MULTI_LIBS_LIST -1 mode)
     message("available mfloat_abi /: ${mode}")
     set(ABI_MODE ${mode} PARENT_SCOPE)
 endfunction()
-
 
 set(CMAKE_C_COMPILER @TOOLS_PATH@/bin/@TRIPLET@-gcc@PREFIX@ CACHE INTERNAL "")
 set(CMAKE_CXX_COMPILER @TOOLS_PATH@/bin/@TRIPLET@-g++@PREFIX@ CACHE INTERNAL "")
@@ -61,7 +57,7 @@ SET(CMAKE_AR @TOOLS_PATH@/bin/@TRIPLET@-ar@PREFIX@ CACHE INTERNAL "")
 SET(CMAKE_C_COMPILER_AR @TOOLS_PATH@/bin/@TRIPLET@-ar@PREFIX@ CACHE INTERNAL "")
 SET(CMAKE_CXX_COMPILER_AR @TOOLS_PATH@/bin/@TRIPLET@-ar@PREFIX@ CACHE INTERNAL "")
 SET(CMAKE_RANLIB @TOOLS_PATH@/bin/@TRIPLET@-ranlib@PREFIX@ CACHE INTERNAL "")
-SET(CMAKE_OBJCOPY  @TOOLS_PATH@/bin/@TRIPLET@-objcopy@PREFIX@ CACHE INTERNAL "")
+SET(CMAKE_OBJCOPY @TOOLS_PATH@/bin/@TRIPLET@-objcopy@PREFIX@ CACHE INTERNAL "")
 SET(CMAKE_OBJDUMP @TOOLS_PATH@/bin/@TRIPLET@-objdump@PREFIX@ CACHE INTERNAL "")
 SET(CMAKE_SIZE @TOOLS_PATH@/bin/@TRIPLET@-size@PREFIX@ CACHE INTERNAL "")
 SET(CMAKE_DEBUGER @TOOLS_PATH@/bin/@TRIPLET@-gdb@PREFIX@ CACHE INTERNAL "")
@@ -71,64 +67,63 @@ SET(CMAKE_NM @TOOLS_PATH@/bin/@TRIPLET@-nm@PREFIX@ CACHE INTERNAL "")
 SET(CMAKE_STRIP @TOOLS_PATH@/bin/@TRIPLET@-strip@PREFIX@ CACHE INTERNAL "")
 #set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_FILE})
 
+SET(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>" CACHE INTERNAL "")
+SET(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_LINKER> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>" CACHE INTERNAL "")
 
-SET(CMAKE_C_LINK_EXECUTABLE     "<CMAKE_LINKER> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>" CACHE INTERNAL "")
-SET(CMAKE_CXX_LINK_EXECUTABLE   "<CMAKE_LINKER> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>" CACHE INTERNAL "")
-
-# When library defined as STATIC, this line is needed to describe how the .a file must be
-# create. Some changes to the line may be needed.
-SET(CMAKE_C_CREATE_STATIC_LIBRARY   "<CMAKE_AR> -crs <TARGET> <LINK_FLAGS> <OBJECTS>" CACHE INTERNAL "")
+# When the library is defined as STATIC, this line describes how the .a file must be created.
+# Some changes may be needed.
+SET(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> -crs <TARGET> <LINK_FLAGS> <OBJECTS>" CACHE INTERNAL "")
 SET(CMAKE_CXX_CREATE_STATIC_LIBRARY "<CMAKE_AR> -crs <TARGET> <LINK_FLAGS> <OBJECTS>" CACHE INTERNAL "")
 
-set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
-#common release or debbug flags
-SET(CMAKE_C_FLAGS_DEBUG             "-Og -g -gdwarf-2"  CACHE INTERNAL "c compiler flags debug")
-SET(CMAKE_CXX_FLAGS_DEBUG           "-Og -g -gdwarf-2"  CACHE INTERNAL "cxx compiler flags debug")
-SET(CMAKE_ASM_FLAGS_DEBUG           "-g"                CACHE INTERNAL "asm compiler flags debug")
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    ""                  CACHE INTERNAL "linker flags debug")
-SET(CMAKE_C_FLAGS_RELEASE           " -Ofast"         CACHE INTERNAL "c compiler flags release")
-SET(CMAKE_CXX_FLAGS_RELEASE         " -Ofast"         CACHE INTERNAL "cxx compiler flags release")
-SET(CMAKE_ASM_FLAGS_RELEASE         ""                  CACHE INTERNAL "asm compiler flags release")
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE  "-flto"             CACHE INTERNAL "linker flags release")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11" CACHE INTERNAL "c compiler flags")
+# Common release or debug flags
+SET(CMAKE_C_FLAGS_DEBUG "-Og -g -gdwarf-2" CACHE INTERNAL "c compiler flags debug")
+SET(CMAKE_CXX_FLAGS_DEBUG "-Og -g -gdwarf-2" CACHE INTERNAL "cxx compiler flags debug")
+SET(CMAKE_ASM_FLAGS_DEBUG "-g" CACHE INTERNAL "asm compiler flags debug")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "" CACHE INTERNAL "linker flags debug")
+SET(CMAKE_C_FLAGS_RELEASE " -Ofast" CACHE INTERNAL "c compiler flags release")
+SET(CMAKE_CXX_FLAGS_RELEASE " -Ofast" CACHE INTERNAL "cxx compiler flags release")
+SET(CMAKE_ASM_FLAGS_RELEASE "" CACHE INTERNAL "asm compiler flags release")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "-flto" CACHE INTERNAL "linker flags release")
 
-#cmake не находит стандартные библиотеки при билде под windows-windows . Не очень правильное решение, но пока лучше не нашел
-if(NOT CMAKE_SYSTEM_PROCESSOR  STREQUAL arm )
-#    set(GCC_LIBRARY_PATHS "-L@TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@")
-endif ()
+# CMake does not find standard libraries when building under windows-windows.
+# This is not a perfect solution, but it works for now.
+if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
+    #    set(GCC_LIBRARY_PATHS "-L@TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@")
+endif()
 
 set(GCC_LINKER_FLAGS "${GCC_LIBRARY_PATHS} -Wl,--gc-sections -Wl,--print-memory-usage -Wl,-V -Wl,--cref ${V}")
 SET(GCC_COMPILE_FLAGS "${GCC_LIBRARY_PATHS} -Wall -fomit-frame-pointer -ffunction-sections -fdata-sections ${V}")
 SET(GCC_ASM_COMPILE_FLAGS "${V}")
 set(GCC_SYSTEM_INCLUDE
-#        @TOOLS_PATH@/lib
-#        @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@
+        #        @TOOLS_PATH@/lib
+        #        @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@
         @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include
         @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include/c++
         @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include/c++/@TRIPLET@
         @TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@/include-fixed
         @TOOLS_PATH@/@TRIPLET@/include CACHE STRING "include gcc files")
 
-include_directories( ${GCC_SYSTEM_INCLUDE})
+include_directories(${GCC_SYSTEM_INCLUDE})
 
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm )
-    set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -mthumb  -masm-syntax-unified ")
-    set(GCC_LINKER_FLAGS "${GCC_LINKER_FLAGS}  ")
-    SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    "${CMAKE_EXE_LINKER_FLAGS_DEBUG} --specs=rdimon.specs"                  CACHE INTERNAL "linker flags debug")
-    # дополнительное описание переопределения стандартного ввода и вывода --specs=rdimon.specs и прочее
-    #https://developer.arm.com/documentation/109845/latest/
-endif ()
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
+    set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -mthumb -masm-syntax-unified")
+    set(GCC_LINKER_FLAGS "${GCC_LINKER_FLAGS}")
+    SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} --specs=rdimon.specs" CACHE INTERNAL "linker flags debug")
+    # Additional description of overriding standard input and output --specs=rdimon.specs
+    # https://developer.arm.com/documentation/109845/latest/
+endif()
 
-set(CMAKE_C_FLAGS   "${GCC_COMPILE_FLAGS} -std=gnu11"  CACHE INTERNAL "c compiler flags ")
-set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS} "  CACHE INTERNAL "cpp compiler flags ")
+set(CMAKE_C_FLAGS "${GCC_COMPILE_FLAGS} -std=gnu11" CACHE INTERNAL "c compiler flags")
+set(CMAKE_CXX_FLAGS "${GCC_COMPILE_FLAGS}" CACHE INTERNAL "cpp compiler flags")
 SET(CMAKE_ASM_FLAGS "${GCC_ASM_COMPILE_FLAGS}" CACHE INTERNAL "ASM compiler common flags")
-SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS} "  CACHE INTERNAL "linker flags")
-#set(CMAKE_STATIC_LINKER_FLAGS "${GCC_LINKER_FLAGS} "  CACHE INTERNAL "linker flags")
+SET(CMAKE_EXE_LINKER_FLAGS "${GCC_LINKER_FLAGS}" CACHE INTERNAL "linker flags")
+#set(CMAKE_STATIC_LINKER_FLAGS "${GCC_LINKER_FLAGS}" CACHE INTERNAL "linker flags")
 
-#СПЕЦИАЛЬНЫЕ ФЛАГИ КОМПИЛЯЦИИ ARM: -mtune -march -mcpu .
-#-mcpu имеет меньший приоритет для компилятора (но более приоритетен в использовании) и будет переписан флагами -mtune и -march
-# следует использовать либо -mcpu, либо -march + -mtune но никак не вместе, иначе оптимизация не будет применена или будет непредсказуемой
-# -mcpu точно говорит компилятору под какой процессор надо оптимизировать, тогда как -march + -mtune будут давать приближенный, но возможно не точный результат оптимизации
-# информация по теме https://community.arm.com/arm-community-blogs/b/tools-software-ides-blog/posts/compiler-flags-across-architectures-march-mtune-and-mcpu
+# SPECIAL ARM COMPILATION FLAGS: -mtune -march -mcpu.
+# -mcpu takes precedence for the compiler and will override -mtune and -march.
+# You should use either -mcpu or -march + -mtune, but not both together.
+# More information: https://community.arm.com/arm-community-blogs/b/tools-software-ides-blog/posts/compiler-flags-across-architectures-march-mtune-and-mcpu
 function(MAKE_GCC_INTERFACE NAME ARM_CPU)
     set(SPECIFIC_PLATFORM_FLAGS "")
     #    message(STATUS "You use ARM_CPU and it's perfect!")
@@ -137,7 +132,7 @@ function(MAKE_GCC_INTERFACE NAME ARM_CPU)
     get_last_multi_lib("hard")
     if(ABI_MODE STREQUAL hard)
         set(SPECIFIC_PLATFORM_FLAGS "${SPECIFIC_PLATFORM_FLAGS} -mfloat-abi=hard")
-    else ()
+    else()
         #        set(ABI_MODE soft)
         get_last_multi_lib("soft")
         if(ABI_MODE STREQUAL soft OR ABI_MODE STREQUAL nofp )
