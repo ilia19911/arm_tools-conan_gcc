@@ -1,3 +1,7 @@
+# Related projects
+
+https://github.com/ilia19911/arm_tools-conan_cmsis5
+
 # Motivation
 
 The motivation for creating this build system comes from the availability of all necessary tools for building ARM32 projects freely on the internet, but the lack of any satisfactory build system implementation. I believe that a build system should allow easy switching between compilers, separation of hardware logic from business logic, and support multiple versions of CMSIS HAL without needing to copy them into each project.
