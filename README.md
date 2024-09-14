@@ -141,6 +141,9 @@ This project represents my personal vision of the best implementation of a build
 # Sources
 - arm gcc prebuild compillers https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
 - gcc options https://gcc.gnu.org/onlinedocs/gcc-13.2.0/gcc/ARM-Options.html
+- gcc sources https://github.com/gcc-mirror/gcc
+- build gcc official instructions https://gcc.gnu.org/install/index.html
+- build gcc ,easy way https://iamsorush.com/posts/build-gcc11/
 - rdimon lib for stdio on stm32 https://developer.arm.com/documentation/109845/latest/
 - mcu compiler tuning https://community.arm.com/arm-community-blogs/b/tools-software-ides-blog/posts/compiler-flags-across-architectures-march-mtune-and-mcpu
 - conan https://docs.conan.io/2/reference/
