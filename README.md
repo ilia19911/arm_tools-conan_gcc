@@ -8,6 +8,11 @@ The motivation for creating this build system comes from the availability of all
 
 Additionally, CMSIS often does not include precompiled NN and DSP libraries, so these must be compiled manually. Many users search for alternative ways to integrate DSP files into their projects for various reasons (e.g., large binary size), even though DSP/Source/CMakeLists.txt contains clear build instructions. Moreover, CMSIS can be built for a PC, simplifying algorithm testing.
 
+
+Typically, one project assumes one target with flags for your processor, which is not convenient when you have tests running on a PC or projects where more than one firmware must be compiled, for example for f1 and f4. This project solves this problem and allows the user to fine-tune targets to suit their goals, even with tests on PC
+
+When generating a project in CubeMX, users often struggle to easily control which version of libraries will be used in the project, and sometimes CubeMX hasn't yet been updated to the latest versions, such as HAL, CMSIS, or FatFS. As a result, depending on the machine where the project was generated, the libraries may have different versions, leading to potential compatibility issues or even the use of outdated libraries. This project solves the problem by allowing easy switching between different library versions or even locking a specific version for the entire development team.
+
 CMSIS provides driver interface descriptions in C, but today, writing embedded projects purely in C for STM32 is becoming less common due to increasing algorithmic complexity. It’s essential to adapt to modern development needs. Furthermore, the compiler flags required to reduce binary size and apply proper processor settings remain a mystery to many users.
 
 If you disagree with any of my points or have resources to share, I welcome any feedback or constructive criticism.
@@ -77,8 +82,31 @@ arm-tools
 If you want to set up your own build system, you will need to install your own JFrog Artifactory server. This can be done by following the instructions at JFrog Open Source. I use the Community Edition because it’s free and supports C/C++ packages (which is all I need). After installation, you can either build packages or fetch my existing ones to your PC and upload them to your private Artifactory.
 
 
+# How it works
+After adding the library to the project ( how to do it, check my example project *todo, add example project*), Conan generates a CMake toolchain file that already includes my custom GCC toolchain with preconfigured paths and compiler flags. Additionally, if the toolchain is for ARM32, interface libraries for different platforms, from Cortex_M0 to Cortex_M7, are added. These can be easily used to link the paths and compiler flags for your target. The toolchain is designed so that compiler flags are not automatically applied to the entire project, allowing the user to choose which compilation settings to apply to specific targets. This is done to enable a single project to contain multiple targets for different controllers.
+
 
 # How to use
+
+To add interface library with flags for specific mcu you can use
+
+```
+target_link_libraries( <YOUR TARGET> PUBLIC CORTEX_M7)
+```
+where CORTEX_M7 you can change to the desired CPY , there are targets CORTEX_M0, CORTEX_M1, CORTEX_M2, CORTEX_M3, CORTEX_M4, CORTEX_M5, CORTEX_M6, CORTEX_M7
+If there isn't your cpy target you can create it with 
+```
+MAKE_GCC_INTERFACE(<NAME> <cpy name>)
+```
+Or you can add flags globally 
+```
+ADD_GLOB_COMPILE_OPTIONS(cortex-m3)
+```
+where cortex-m3 you can change to the desired CPY
+
+I prefer use cpy name instead of other metods for tune according this article https://community.arm.com/arm-community-blogs/b/tools-software-ides-blog/posts/compiler-flags-across-architectures-march-mtune-and-mcpu
+
+
  You can find an example in another repository of mine, where I use several packages and separate logic from hardware using C++ drivers. (To-do: Add repo link).
 # Build
 To build the package, clone the repository:  *git clone https://github.com/ilia19911/arm_tools-conan_gcc.git*
