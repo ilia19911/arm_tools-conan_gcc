@@ -14,9 +14,11 @@ If you disagree with any of my points or have resources to share, I welcome any 
 
 # Common
 
-This project is designed to generate GCC packages within the Conan framework, simplifying the management of ARM32 project builds (or any platform project, such as Linux x86_64). It allows development teams to easily use the same compiler across all members without configuring the build environment on each machine, and to switch between compilers as needed. Additionally, it enables building static libraries for specific compiler releases, ensuring reliable linking and avoiding ABI compatibility issues.
+This project is designed to generate GCC packages within the Conan framework, simplifying the management of ARM32 project builds (or any platform project, such as Linux x86_64). It allows development teams to easily use the same compiler across all members without configuring the build environment on each machine, and to switch between compilers as needed. Additionally, it enables building static libraries for specific compiler releases, ensuring reliable linking and avoiding ABI compatibility issues. 
 
 The system makes it easy to switch between build targets and test the entire business logic on a PC using a proposed pattern for separating lower and upper levels of the program. The project also includes a CMake toolchain with pre-configured compilation flags (supporting both release and debug builds).
+
+ *IMPORTANT*: it is not necessary to build the package to use it, as it is already hosted on my server. All you need to do is add my Conan package server to your list of repositories.
 
 # Abstract overwiev
 
