@@ -14,7 +14,7 @@ from conan.tools.files import get, copy
 class OperationSystems(Enum):
     Linux = 'Linux'
     Windows = 'Windows'
-    Macos = 'Macos'
+    Darwin = 'Macos'
     Generic = 'baremetal'
 
 
@@ -55,15 +55,16 @@ target_info = {
     'aarch64-none-linux-gnu': HostInfo(Architectures.aarch64, OperationSystems.Linux),
     'aarch64_be-none-linux-gnu': HostInfo(Architectures.aarch64, OperationSystems.Linux),
     'x86_64-w64-mingw32': HostInfo(Architectures.x86_64, OperationSystems.Windows),
-    'x86_64-linux-gnu': HostInfo(Architectures.x86_64, OperationSystems.Linux)
+    'x86_64-linux-gnu': HostInfo(Architectures.x86_64, OperationSystems.Linux),
+    "aarch64-apple-darwin23": HostInfo(Architectures.aarch64, OperationSystems.Darwin)
 }
 
 host_info = {
     'mingw-w64-i686': HostInfo(Architectures.x86_64, OperationSystems.Windows),
     'x86_64': HostInfo(Architectures.x86_64, OperationSystems.Linux),
     'aarch64': HostInfo(Architectures.aarch64, OperationSystems.Linux),
-    'darwin-x86_64': HostInfo(Architectures.x86_64, OperationSystems.Macos),
-    'darwin-arm64': HostInfo(Architectures.aarch64, OperationSystems.Macos)
+    'darwin-x86_64': HostInfo(Architectures.x86_64, OperationSystems.Darwin),
+    'darwin-arm64': HostInfo(Architectures.aarch64, OperationSystems.Darwin)
 }
 
 
@@ -92,6 +93,7 @@ def have_sha256_and_filename(folder_url, auth=None):
 
 def list_artifactory_folder(folder_url, auth=None):
     try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "beautifulsoup4"])
         from bs4 import BeautifulSoup
         response = requests.get(folder_url, auth=auth)
         response.raise_for_status()
@@ -104,8 +106,13 @@ def list_artifactory_folder(folder_url, auth=None):
 
 
 def parse_toolchain_filename(filename):
+    # Получение строки ключей, разделенных символом "|"
+    hosts_list = "|".join(host_info.keys())
+    target_list = "|".join(target_info.keys())
+    print("hosts_list " + hosts_list)
+    print("target_list " + target_list)
     # Определяем паттерн для имени файла
-    pattern = r'^.*?(arm-gnu-toolchain|windows-native|linux-native)-([\d\.]+\.rel\d+)-(mingw-w64-i686|x86_64|aarch64|darwin-x86_64|darwin-arm64)-(arm-none-eabi|arm-none-linux-gnueabihf|aarch64-none-elf|aarch64-none-linux-gnu|aarch64_be-none-linux-gnu|x86_64-w64-mingw32|x86_64-linux-gnu)\.(zip|tar\.xz|pkg)'
+    pattern = fr'^.*?(arm-gnu-toolchain|windows-native|linux-native|darwin-arm64_native)-([\d\.]+\.rel\d+)-({hosts_list})-({target_list})\.(zip|tar\.xz|pkg)'
     match = re.match(pattern, filename)
     print(match)
     if not match:
@@ -247,7 +254,7 @@ class ArmGccConan(ConanFile):
         gcc_path = gcc_path.replace("\\", "/")
         # Используем регулярное выражение для удаления всех букв
         version_without_chars = re.sub(r'[a-zA-Z]', '', vers)
-        pref = "" if host.os == OperationSystems.Linux else ".exe" if host.os == OperationSystems.Windows else ".pkg"
+        pref = "" if host.os == OperationSystems.Linux else ".exe" if host.os == OperationSystems.Windows else ""
         print("version: ", version_without_chars)
         variables = {
             "@PREFIX@": pref,

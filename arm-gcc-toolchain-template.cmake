@@ -92,8 +92,12 @@ if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
     #    set(GCC_LIBRARY_PATHS "-L@TOOLS_PATH@/lib/gcc/@TRIPLET@/@VERSION@")
 endif()
 
-set(GCC_LINKER_FLAGS "${GCC_LIBRARY_PATHS} -Wl,--gc-sections -Wl,--print-memory-usage -Wl,-V -Wl,--cref ${V}")
-SET(GCC_COMPILE_FLAGS "${GCC_LIBRARY_PATHS} -Wall -fomit-frame-pointer -ffunction-sections -fdata-sections ${V}")
+if(CMAKE_SYSTEM_NAME STREQUAL Generic)
+    set(GCC_LINKER_FLAGS "${GCC_LIBRARY_PATHS} -Wl,-V -Wl,--cref -Wl,--gc-sections -Wl,--print-memory-usage ")
+    SET(GCC_COMPILE_FLAGS "${GCC_LIBRARY_PATHS} -fomit-frame-pointer -ffunction-sections -fdata-sections")
+endif ()
+set(GCC_LINKER_FLAGS "${GCC_LIBRARY_PATHS}  ${V}")
+SET(GCC_COMPILE_FLAGS "${GCC_LIBRARY_PATHS} -Wall ${V}")
 SET(GCC_ASM_COMPILE_FLAGS "${V}")
 set(GCC_SYSTEM_INCLUDE
         #        @TOOLS_PATH@/lib
@@ -105,8 +109,9 @@ set(GCC_SYSTEM_INCLUDE
         @TOOLS_PATH@/@TRIPLET@/include CACHE STRING "include gcc files")
 
 include_directories(${GCC_SYSTEM_INCLUDE})
+set(CMAKE_OSX_SYSROOT /doesn't/needed)
 
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
+if(CMAKE_SYSTEM_NAME STREQUAL Generic)
     set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -mthumb -masm-syntax-unified")
     set(GCC_LINKER_FLAGS "${GCC_LINKER_FLAGS}")
     SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} --specs=rdimon.specs" CACHE INTERNAL "linker flags debug")
@@ -184,7 +189,7 @@ function(ADD_GLOB_COMPILE_OPTIONS ARM_CPU)
 
 endfunction()
 
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
+if(CMAKE_SYSTEM_NAME STREQUAL Generic)
     MAKE_GCC_INTERFACE(CORTEX_M0 cortex-m0)
     MAKE_GCC_INTERFACE(CORTEX_M1 cortex-m1)
     MAKE_GCC_INTERFACE(CORTEX_M3 cortex-m3)

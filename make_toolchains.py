@@ -50,11 +50,13 @@ for folder in folders:
     # if host.os != tc_info.OperationSystems.Windows or host.arch != tc_info.Architectures.x86_64 or target.os\
     #         != tc_info.OperationSystems.Generic or target.arch != tc_info.Architectures.arm:
     #     continue
+    # if host.os != tc_info.OperationSystems.Darwin and target.os !=tc_info.OperationSystems.Darwin:
+    #     continue
 
     v = version.split('.')[0]
     s = "-s "
     s_b = "-s:b "
-    comand = f"export URL=\"{folder}\" && conan create . {comand_maker(s, target, v)} {comand_maker(s_b, host, v)} --version={version} --build-require"
+    comand = f"export URL=\"{folder}\" && conan create . {comand_maker(s, target, v)} {comand_maker(s_b, host, v)} --version={v} --build-require"
     print(comand)
     result = subprocess.run(comand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     # print(result)
