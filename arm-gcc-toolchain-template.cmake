@@ -114,6 +114,7 @@ set(CMAKE_OSX_SYSROOT /doesn't/needed)
 if(CMAKE_SYSTEM_NAME STREQUAL Generic)
     set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -mthumb -masm-syntax-unified")
     set(GCC_LINKER_FLAGS "${GCC_LINKER_FLAGS}")
+    SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} --specs=nosys.specs" CACHE INTERNAL "linker flags release")
     SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} --specs=rdimon.specs" CACHE INTERNAL "linker flags debug")
     # Additional description of overriding standard input and output --specs=rdimon.specs
     # https://developer.arm.com/documentation/109845/latest/
