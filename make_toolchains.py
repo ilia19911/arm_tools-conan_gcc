@@ -39,7 +39,8 @@ def collect_nested_toolchains(base_url, auth=None):
 # Example usage
 # base_url = 'http://artifactory.local:80/artifactory/arm-tools/GCC_13.2/'
 # base_url = "http://192.168.0.127:8082/artifactory/arm-gcc/gcc_13.3/"
-base_url = 'https://artifactory.nextcloud-iahve.ru/artifactory/arm-gcc/gcc_13.3/'
+# base_url = 'https://artifactory.nextcloud-iahve.ru/artifactory/arm-gcc/gcc_13.3/'
+base_url = "https://nexus.iahve.space/service/rest/repository/browse/compillers/"
 folders = collect_nested_toolchains(base_url)
 for folder in folders:
     # folder = "http://artifactory.local:80/artifactory/arm-tools/GCC_13.2/x86_64%20Linux%20hosted%20cross%20toolchains/AArch32%20bare-metal%20target%20(arm-none-eabi)/"

@@ -168,7 +168,9 @@ class ArmGccConan(ConanFile):
         try:
             print(f"SHA: {sha}")
             print(f"Filename: {filename}")
-            get(self, f"{url}/{filename}", sha256=sha, strip_root=True, destination=dest)
+            prune_url = url.replace("service/rest/","",1)
+            prune_url = prune_url.replace("browse/","",1)
+            get(self, f"{prune_url}/{filename}", sha256=sha, strip_root=True, destination=dest)
         except FileNotFoundError as e:
             print(e)
 
