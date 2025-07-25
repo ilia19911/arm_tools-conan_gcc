@@ -51,7 +51,7 @@ for folder in folders:
     # if host.os != tc_info.OperationSystems.Windows or host.arch != tc_info.Architectures.x86_64 or target.os\
     #         != tc_info.OperationSystems.Generic or target.arch != tc_info.Architectures.arm:
     #     continue
-    # if host.os != tc_info.OperationSystems.Darwin and target.os !=tc_info.OperationSystems.Darwin:
+    # if host.os != tc_info.OperationSystems.Linux and target.os !=tc_info.OperationSystems.Generic:
     #     continue
 
     v = version.split('.')[0]
@@ -64,10 +64,11 @@ for folder in folders:
     if result.returncode == 0:
         print("Команда завершилась успешно")
         print("Вывод команды:", result.stdout)
-        # comand = f"conan upload arm-gcc/{version} -r arm-gcc"
-        # print(comand)
-        # result = subprocess.run(comand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
     if result.returncode !=0:
         print("Команда завершилась с ошибкой")
         print("Ошибка:", result.stderr)
         raise ValueError(f"сборка пакета не удалась, почините скрипт сборки")
+comand = f"conan upload gcc/13 -r nexus.iahve.space"
+print(comand)
+result = subprocess.run(comand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
